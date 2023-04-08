@@ -45,6 +45,7 @@ nest.js
    client.emit("joinedRoom" , room)
   }
 
+  
   @SubscribeMessage("leaveRoom")
   handleLeaveRoom(client:Socket,message:{sender:string,room:string,message:String}) {
 // leave   room that a string send from client 
