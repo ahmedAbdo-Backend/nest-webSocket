@@ -1,0 +1,54 @@
+nest.js 
+
+- install   
+* "@nestjs/platform-socket.io": "^9.4.0",
+   * "@nestjs/websockets": "^9.4.0",
+   * "@types/socket.io": "^3.0.2",
+    * "socket.io": "^4.6.1",
+   - nest g gateway // generate socket file 
+-  @WebSocketGateway({ cors: true , namespace:"/chat"} ) // to chage name space that send to socete 
+ ex client side 
+ this.socket.chat = io('http://localhost:3000/chat'); // same url (namespace) of @WebSocketGateway({ cors: true , namespace:"/chat"} ) 
+
+ - 
+
+ export class ChatGateway implements OnGatewayInit  , OnGatewayConnection , OnGatewayDisconnect{
+    // use server to send to client data 
+    @WebSocketServer()
+    server :Server;
+    private logger:Logger = new Logger("chatGateway")
+    afterInit() {
+        console.log("WebSocket gateway initialized");
+    }
+    // see how is connected
+    handleConnection(client: Socket, ...args: any[]) {
+      console.log("connected",client.id);
+    }
+    handleDisconnect(client: Socket) {
+        console.log("disconnected",client.id);
+
+    }
+// listen to client emit on chatToServer
+  @SubscribeMessage("chatToServer")
+  handleMessage(client:Socket,message:{sender:string,room:string,message:String}) {
+    # // emit to chatToClient now we must goo to client side an listen to chatToClient  usin on   this.socket.chat.on('chatToClient', (msg) => {
+    #     this.receiveChatMessage(msg);
+    # });
+     this.server.to(message.room).emit("chatToClient", message)
+    // this.server.emit("chatToClient", payload); // to send the message to everyone 
+  }
+
+  @SubscribeMessage("joinRoom")
+  handleJoinRoom(client:Socket,message:{sender:string,room:string,message:String}) {
+// join to room that a string send from client 
+   client.join(message.room)
+   client.emit("joinedRoom" , room)
+  }
+
+  @SubscribeMessage("leaveRoom")
+  handleLeaveRoom(client:Socket,message:{sender:string,room:string,message:String}) {
+// leave   room that a string send from client 
+   client.leave(message.room)
+   client.emit("leftRoom" , room)
+  }
+}
